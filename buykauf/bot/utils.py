@@ -1,6 +1,8 @@
 import functools
 from collections.abc import Iterable
+from contextlib import contextmanager
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from .base import Session
 
 
 def send(func):
@@ -21,7 +23,7 @@ def send_inline_keyboard(func):
         keyboard = func(*args, **kwargs)
         assert type(keyboard) == list
         reply_markup = InlineKeyboardMarkup(keyboard)
-        args[2].bot.send_message(chat_id=args[1].message.chat_id, text="Hallo", reply_markup=reply_markup)
+        args[2].bot.send_message(chat_id=args[1].message.chat_id, text="Einkaufsliste:", reply_markup=reply_markup)
         return keyboard
 
     return wrapper_inline
@@ -52,3 +54,20 @@ def send_action(action):
         return command_func
 
     return decorator
+
+
+
+
+@contextmanager
+def session_scope(tele_error):
+    """Provide a transactional scope around a series of operations."""
+    session = Session()
+    try:
+        yield session
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        tele_error.message += "\n" + str(e)
+        raise tele_error
+    finally:
+        session.close()

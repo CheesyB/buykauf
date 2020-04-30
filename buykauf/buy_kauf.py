@@ -24,8 +24,7 @@ def main():
     logger = logging.getLogger("BuyKauf")
     logger.info("started BuyKaufBot")
     conf = Config()
-    bbot = BuyKaufBot(conf['CONNECTION'])
-    conf = Config()
+    bbot = BuyKaufBot()
 
     TOKEN = conf['TOKEN']
 
@@ -37,8 +36,10 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("list", bbot.get_list_dialog))
-    dp.add_handler(CallbackQueryHandler(bbot.button))
-    dp.add_handler(MessageHandler(Filters.regex('\+'), bbot.add_item))
+    dp.add_handler(CommandHandler("reset", bbot.reset_shopping_list))
+    dp.add_handler(CallbackQueryHandler(bbot.remove_from_shopping_list_button))
+                                       #pattern="^remove_from_shopping_list_button"))
+    dp.add_handler(MessageHandler(Filters.regex('^\+'), bbot.add_item))
 
     dp.add_error_handler(bbot.error_callback)
 
