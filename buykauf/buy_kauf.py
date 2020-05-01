@@ -38,6 +38,7 @@ def main():
     dp.add_handler(CommandHandler("list", bbot.get_list_dialog))
     dp.add_handler(CommandHandler("reset", bbot.reset_shopping_list))
     dp.add_handler(CommandHandler("add", bbot.add_item_from_items_dialog))
+    dp.add_handler(CommandHandler("del", bbot.delete_from_larder_dialog))
     dp.add_handler(CallbackQueryHandler(bbot.main_handler_button))
     dp.add_handler(MessageHandler(Filters.regex('^\+'), bbot.add_item))
 
