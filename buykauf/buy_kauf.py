@@ -37,8 +37,8 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("list", bbot.get_list_dialog))
     dp.add_handler(CommandHandler("reset", bbot.reset_shopping_list))
-    dp.add_handler(CallbackQueryHandler(bbot.remove_from_shopping_list_button))
-                                       #pattern="^remove_from_shopping_list_button"))
+    dp.add_handler(CommandHandler("add", bbot.add_item_from_items_dialog))
+    dp.add_handler(CallbackQueryHandler(bbot.main_handler_button))
     dp.add_handler(MessageHandler(Filters.regex('^\+'), bbot.add_item))
 
     dp.add_error_handler(bbot.error_callback)

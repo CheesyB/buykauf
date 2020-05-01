@@ -1,5 +1,5 @@
 import functools
-from collections.abc import Iterable
+import json
 from contextlib import contextmanager
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from .base import Session
@@ -17,23 +17,26 @@ def send(func):
     return wrapper_send
 
 
-def send_inline_keyboard(func):
-    @functools.wraps(func)
-    def wrapper_inline(*args, **kwargs):
-        keyboard = func(*args, **kwargs)
-        assert type(keyboard) == list
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        args[2].bot.send_message(chat_id=args[1].message.chat_id, text="Einkaufsliste:", reply_markup=reply_markup)
-        return keyboard
-
-    return wrapper_inline
+def send_inline_keyboard(text):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper_inline(*args, **kwargs):
+            keyboard = func(*args, **kwargs)
+            assert type(keyboard) == list
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            args[2].bot.send_message(chat_id=args[1].message.chat_id, text=text, reply_markup=reply_markup)
+            return keyboard
+        return wrapper_inline
+    return decorator
 
 
 def build_menu(buttons,
                n_cols,
+               button_type,
                header_buttons=None,
                footer_buttons=None):
-    buttons = [InlineKeyboardButton(button, callback_data=button) for button in buttons]
+    buttons = [InlineKeyboardButton(button,
+                    callback_data=json.dumps({'name': button, 'type': button_type})) for button in buttons]
     menu = [buttons[i:i + n_cols] for i in range(0, len(buttons), n_cols)]
     if header_buttons:
         menu.insert(0, [header_buttons])

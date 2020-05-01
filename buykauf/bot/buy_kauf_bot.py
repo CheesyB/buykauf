@@ -1,5 +1,5 @@
 import logging
-
+import json
 from sqlalchemy.exc import IntegrityError
 from telegram import InlineKeyboardMarkup, ChatAction
 from telegram.error import Unauthorized, BadRequest, TimedOut, NetworkError, ChatMigrated, TelegramError
@@ -7,8 +7,8 @@ from .utils import send, send_inline_keyboard, build_menu, session_scope
 from .base import Base, Session, engine
 from .item import Item
 
-
 STRIKE = '\u0336'
+
 
 class BuyKaufBot():
 
@@ -16,23 +16,45 @@ class BuyKaufBot():
         self.logger = logging.getLogger("BuyKauf")
         Base.metadata.create_all(engine)
 
-
-    @send_inline_keyboard
+    @send_inline_keyboard("Einkaufsliste")
     def get_list_dialog(self, update, context):
         with session_scope(TelegramError("hups! Die Liste konnte ich nicht kriegen...")) as session:
             items = [str(it) for it in session.query(Item).filter(Item.on_list == True)]
-        return build_menu(items, 2)
+        return build_menu(items, 2, 'rm')
 
-    def remove_from_shopping_list_button(self, update, context):
+    @send_inline_keyboard("Vorratskammer")
+    def add_item_from_items_dialog(self, update, context):
+        with session_scope(TelegramError("Kann keine Liste erstellen.")) as session:
+            items = [str(it) for it in session.query(Item).filter(Item.on_list == False).order_by(Item.total_count)]
+        return build_menu(items, 2, 'add')
+
+    def main_handler_button(self, update, context):
         query = update.callback_query
         query.answer()
+        callback_dict = json.loads(update.callback_query.data)
+        if callback_dict['type'] == 'rm':
+            self.remove_from_shopping_list_button(update, context, callback_dict)
+        if callback_dict['type'] == 'add':
+            self.add_item_from_items_button(update, context, callback_dict)
+
+    def remove_from_shopping_list_button(self, update, context, callback_dict):
         with session_scope(TelegramError("Grmph!! Das konnte ich nicht löschen!")) as session:
-            item = session.query(Item).filter(Item.name == update.callback_query.data).first()
+            item = session.query(Item).filter(Item.name == callback_dict['name']).first()
             item.on_list = False
             remaining_items = [str(it) for it in session.query(Item).filter(Item.on_list == True)]
             context.bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
-                                             message_id=update.callback_query.message.message_id,
-                                             reply_markup=InlineKeyboardMarkup(build_menu(remaining_items, 2)))
+                                                  message_id=update.callback_query.message.message_id,
+                                                  reply_markup=InlineKeyboardMarkup(
+                                                      build_menu(remaining_items, 2, 'rm')))
+
+    def add_item_from_items_button(self, update, context, callback_dict):
+        with session_scope(TelegramError("Kann keine Liste erstellen.")) as session:
+            item = session.query(Item).filter(Item.name == callback_dict['name']).first()
+            item.on_list = True
+            items = [str(it) for it in session.query(Item).filter(Item.on_list == False).order_by(Item.total_count)]
+            context.bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
+                                                  message_id=update.callback_query.message.message_id,
+                                                  reply_markup=InlineKeyboardMarkup(build_menu(items, 2, 'add')))
 
     @send
     def reset_shopping_list(self, update, context):
@@ -53,26 +75,6 @@ class BuyKaufBot():
                 session.add(item)
 
         return f"Added {added_items} to shopping list"
-
-
-    def add_item_from_larder(self):
-        return
-
-    def _get_or_increase_item(self, session, name, items_list):
-        item = session.query(Item).filter_by(name=name).first()
-        if not item:
-            item = Item(name)
-            items_list.append(item.name)
-        else:
-            item.total_count += 1
-            item.on_list = True
-            items_list.append(STRIKE.join(item.name) + STRIKE)
-        return item
-
-    @send_inline_keyboard
-    def add_from_list(self):
-        return build_menu(LARDER, 2)
-
 
     @send
     def error_callback(self, update, context):
@@ -102,3 +104,14 @@ class BuyKaufBot():
         except TelegramError as e:
             logger.warning(e)
             return "TeleError - " + str(e)
+
+    def _get_or_increase_item(self, session, name, items_list):
+        item = session.query(Item).filter_by(name=name).first()
+        if not item:
+            item = Item(name)
+            items_list.append(item.name)
+        else:
+            item.total_count += 1
+            item.on_list = True
+            items_list.append(STRIKE.join(item.name) + STRIKE)
+        return item
