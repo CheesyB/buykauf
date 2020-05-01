@@ -4,17 +4,19 @@ from config import Config
 from bot.buy_kauf_bot import BuyKaufBot
 
 
-# Define a few command handlers. These usually take the two arguments update and
-# context. Error handlers also receive the raised TelegramError object in error.
-def start(update, context):
-    logger = logging.getLogger("minna.start")
-    logger.info("start")
-    update.message.reply_text(
-        'Hi! Ich bin der Bot:)')
 
 
 def help(update, context):
-    message = "Hallo ich bin der BuyKaufBot und habe folgende Befehle:\n"
+    message = "Hallo ich bin die Minna. Ich habe eine Vorratskammer und eine Einkaufsliste. Alles was auf" \
+              "der Einkaufliste steht ist auch gleichzeitig in der Vorratskammer. Um eine neues Einkaufsding" \
+              "hinzuzufügen einfach:\n"\
+              "+ und alles was hinzu kommen soll mit Leerzeichen\n" \
+              "das fügt dann die Sachen in die Vorratskammer aber auch auf die Einkaufsliste. Die kannst du mit:" \
+              "/list abrufen" \
+              "Wenn du hier auf eine Button drücks verschwindet es von der List und ist somit wahrscheinlich gekauft.\n" \
+              "/add fügt von der Vorratskammer in die Einkaufsliste und\n" \
+              "/reset löscht die Einkaufsliste mit\n" \
+              "/del löscht du Items aus der Vorratskammer (vorsicht:) sonst ist alles weg..."
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=message)
@@ -34,7 +36,7 @@ def main():
     dp = updater.dispatcher
 
     # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("list", bbot.get_list_dialog))
     dp.add_handler(CommandHandler("reset", bbot.reset_shopping_list))
     dp.add_handler(CommandHandler("add", bbot.add_item_from_items_dialog))
