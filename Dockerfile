@@ -3,4 +3,4 @@ COPY . /buykauf
 WORKDIR /buykauf
 RUN pip install -r requirements.txt
 
-CMD ["python", "baykauf/buy_kauf.py"]
+CMD ["python", "buykauf/buy_kauf.py"]
