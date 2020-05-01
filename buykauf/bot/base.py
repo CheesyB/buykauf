@@ -10,7 +10,7 @@ from sqlalchemy.pool import StaticPool
 #    poolclass=StaticPool
 #)
 
-engine = create_engine('sqlite:///../db/buykauf.db')
+engine = create_engine('sqlite:///../db/buykauf.sqlite3')
 
 Session = sessionmaker(bind=engine)
 
