@@ -6,5 +6,5 @@ docker run --rm -d \
   --env CONNECTION=$CONNECTION \
   --env LOGPATH=$LOGPATH \
   --env LOGNAME=$LOGNAME \
-  --mount source=sql_persistance,target=/persistance \
+  --mount source=db,target=/persistance \
   buykauf:latest
