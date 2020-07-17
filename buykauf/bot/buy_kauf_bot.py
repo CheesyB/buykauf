@@ -1,6 +1,6 @@
 import logging
 import json
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import asc
 from telegram import InlineKeyboardMarkup, ChatAction
 from telegram.error import Unauthorized, BadRequest, TimedOut, NetworkError, ChatMigrated, TelegramError
 from .utils import send, send_inline_keyboard, build_menu, session_scope
@@ -35,7 +35,7 @@ class BuyKaufBot():
     @send_inline_keyboard("Vorratskammer")
     def add_item_from_items_dialog(self, update, context):
         with session_scope(TelegramError("Kann keine Liste erstellen.")) as session:
-            items = [str(it) for it in session.query(Item).filter(Item.on_list == False).order_by(Item.total_count)]
+            items = [str(it) for it in session.query(Item).filter(Item.on_list == False).order_by(asc(Item.name))]
         return build_menu(items, 2, 'add')
 
     def add_item_from_items_button(self, update, context, callback_dict):
