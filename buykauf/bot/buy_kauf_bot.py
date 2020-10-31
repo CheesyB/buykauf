@@ -26,7 +26,7 @@ class BuyKaufBot():
         with session_scope(TelegramError("Grmph!! Das konnte ich nicht löschen!")) as session:
             item = session.query(Item).filter(Item.name == callback_dict['name']).first()
             item.on_list = False
-            remaining_items = [str(it) for it in session.query(Item).filter(Item.on_list == True)]
+            remaining_items = [str(it) for it in session.query(Item).filter(Item.on_list == True).order_by(asc(Item.name))]
             context.bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
                                                   message_id=update.callback_query.message.message_id,
                                                   reply_markup=InlineKeyboardMarkup(
@@ -42,7 +42,7 @@ class BuyKaufBot():
         with session_scope(TelegramError("Kann keine Liste erstellen.")) as session:
             item = session.query(Item).filter(Item.name == callback_dict['name']).first()
             item.on_list = True
-            items = [str(it) for it in session.query(Item).filter(Item.on_list == False).order_by(Item.total_count)]
+            items = [str(it) for it in session.query(Item).filter(Item.on_list == False).order_by(asc(Item.name))]
             context.bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
                                                   message_id=update.callback_query.message.message_id,
                                                   reply_markup=InlineKeyboardMarkup(build_menu(items, 2, 'add')))
@@ -50,7 +50,7 @@ class BuyKaufBot():
     @send_inline_keyboard("Löschen aus Vorratskammer")
     def delete_from_larder_dialog(self, update, context):
         with session_scope(TelegramError("Kann leider nicht aus der Vorratskammer löschen.")) as session:
-            items = [str(it) for it in session.query(Item).order_by(Item.total_count)]
+            items = [str(it) for it in session.query(Item).order_by(asc(Item.name))]
         return build_menu(items, 2, 'rmLarder')
 
     def delete_from_larder_button(self, update, context, callback_dict):
